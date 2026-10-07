@@ -1,0 +1,193 @@
+{% extends "layout.html" %}
+
+{% block title %}Admin Dashboard - Online Feedback Collector{% endblock %}
+
+{% block content %}
+<main class="container-fluid max-width-container py-4 flex-grow-1">
+
+    <!-- DASHBOARD HEADER & ACTIONS -->
+    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+        <div>
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-purple bg-opacity-10 text-purple border border-indigo border-opacity-25 mb-1">
+                <i class="fas fa-shield-alt text-indigo"></i>
+                <span class="small fw-bold text-indigo">Administrator Portal</span>
+            </div>
+            <h2 class="fw-bold mb-0 text-white">Analytics & Feedback Management</h2>
+        </div>
+        
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <!-- Export CSV Button -->
+            <a href="{{ url_for('export_csv') }}" class="btn btn-success fw-bold px-3 py-2 rounded-3 shadow-sm d-inline-flex align-items-center">
+                <i class="fas fa-file-csv fa-lg me-2"></i> Export CSV
+            </a>
+            
+            <!-- Seed Sample Data Button -->
+            <form action="{{ url_for('seed_data') }}" method="POST" class="d-inline">
+                <button type="submit" class="btn btn-outline-info fw-bold px-3 py-2 rounded-3">
+                    <i class="fas fa-database me-1"></i> Seed Sample Data
+                </button>
+            </form>
+
+            <!-- Logout Button -->
+            <a href="{{ url_for('logout') }}" class="btn btn-outline-danger fw-bold px-3 py-2 rounded-3">
+                <i class="fas fa-right-from-bracket me-1"></i> Logout
+            </a>
+        </div>
+    </div>
+
+    <!-- SUMMARY METRIC CARDS -->
+    <div class="row g-3 mb-4">
+        <!-- Total Feedback Card -->
+        <div class="col-sm-6 col-xl-3">
+            <div class="stat-card">
+                <div class="stat-icon icon-purple">
+                    <i class="fas fa-comments"></i>
+                </div>
+                <div>
+                    <div class="stat-value">{{ stats.total_feedback }}</div>
+                    <div class="stat-label">Total Submissions</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Average Rating Card -->
+        <div class="col-sm-6 col-xl-3">
+            <div class="stat-card">
+                <div class="stat-icon icon-gold">
+                    <i class="fas fa-star"></i>
+                </div>
+                <div>
+                    <div class="stat-value">{{ stats.avg_rating }} <span class="fs-6 text-muted fw-normal">/ 5.0</span></div>
+                    <div class="stat-label">Average Rating</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5-Star Reviews Card -->
+        <div class="col-sm-6 col-xl-3">
+            <div class="stat-card">
+                <div class="stat-icon icon-emerald">
+                    <i class="fas fa-thumbs-up"></i>
+                </div>
+                <div>
+                    <div class="stat-value">{{ stats.five_star_reviews }}</div>
+                    <div class="stat-label">5-Star Reviews</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 1-Star Reviews Card -->
+        <div class="col-sm-6 col-xl-3">
+            <div class="stat-card">
+                <div class="stat-icon icon-rose">
+                    <i class="fas fa-triangle-exclamation"></i>
+                </div>
+                <div>
+                    <div class="stat-value">{{ stats.one_star_reviews }}</div>
+                    <div class="stat-label">1-Star Reviews</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHARTS SECTION -->
+    <div class="row g-4 mb-4">
+        <!-- Rating Distribution Chart -->
+        <div class="col-lg-6">
+            <div class="glass-card h-100">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h5 class="fw-bold mb-0"><i class="fas fa-chart-bar text-warning me-2"></i>Rating Distribution</h5>
+                    <span class="badge bg-dark text-secondary font-monospace">1 - 5 Stars</span>
+                </div>
+                <div class="chart-box">
+                    <canvas id="ratingDistributionChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feedback Trend Chart -->
+        <div class="col-lg-6">
+            <div class="glass-card h-100">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h5 class="fw-bold mb-0"><i class="fas fa-chart-line text-info me-2"></i>Submission Trend</h5>
+                    <span class="badge bg-dark text-secondary font-monospace">Over Time</span>
+                </div>
+                <div class="chart-box">
+                    <canvas id="feedbackTrendChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FEEDBACK DATA TABLE & SEARCH SECTION -->
+    <div class="glass-card p-0">
+        <div class="p-4 border-bottom border-white border-opacity-10 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+            <div>
+                <h4 class="fw-bold mb-1"><i class="fas fa-list-check text-primary me-2"></i>Feedback Records</h4>
+                <p class="text-secondary small mb-0">Search and filter user submissions in real time.</p>
+            </div>
+            
+            <div class="search-box position-relative" style="min-width: 280px;">
+                <i class="fas fa-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+                <input type="text" id="tableSearchInput" class="form-control ps-5" placeholder="Search Name, Email, or Comments...">
+            </div>
+        </div>
+
+        <div class="table-responsive custom-table-container">
+            <table class="table table-custom table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th style="width: 70px;">ID</th>
+                        <th style="width: 180px;">User Name</th>
+                        <th style="width: 220px;">Email Address</th>
+                        <th style="width: 140px;">Rating</th>
+                        <th>Comments & Feedback</th>
+                        <th style="width: 180px;">Date Submitted</th>
+                    </tr>
+                </thead>
+                <tbody id="feedbackTableBody">
+                    {% if feedback_list %}
+                        {% for item in feedback_list %}
+                            <tr>
+                                <td class="font-monospace fw-bold text-secondary">#{{ item.id }}</td>
+                                <td class="fw-bold text-white">{{ item.name }}</td>
+                                <td class="text-info font-monospace small">{{ item.email }}</td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="table-stars">
+                                            {% for i in range(1, 6) %}
+                                                {% if i <= item.rating %}★{% else %}<span class="text-muted opacity-25">★</span>{% endif %}
+                                            {% endfor %}
+                                        </span>
+                                        <span class="badge-rating">{{ item.rating }}/5</span>
+                                    </div>
+                                </td>
+                                <td class="text-light" style="max-width: 350px;">
+                                    <div class="text-truncate-multi" title="{{ item.comments }}">{{ item.comments }}</div>
+                                </td>
+                                <td class="text-muted small font-monospace">
+                                    <i class="far fa-clock me-1"></i>{{ item.date_submitted }}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted">
+                                <i class="fas fa-folder-open fa-3x mb-3 text-secondary opacity-50"></i>
+                                <h5 class="fw-bold">No Feedback Entries Found</h5>
+                                <p class="small mb-3">No user submissions are currently stored in the SQLite database.</p>
+                                <form action="{{ url_for('seed_data') }}" method="POST" class="d-inline">
+                                    <button type="submit" class="btn btn-primary-gradient btn-sm">
+                                        <i class="fas fa-plus-circle me-1"></i> Populate Sample Demonstration Data
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</main>
+{% endblock %}

@@ -1,0 +1,70 @@
+{% extends "layout.html" %}
+
+{% block title %}Admin Login - Online Feedback Collector{% endblock %}
+
+{% block content %}
+<main class="container py-5 flex-grow-1 d-flex align-items-center justify-content-center">
+    <div class="glass-card p-4 p-md-5 w-100" style="max-width: 440px;">
+        
+        <!-- HEADER -->
+        <div class="text-center mb-4">
+            <div class="brand-icon mx-auto mb-3" style="width: 52px; height: 52px; font-size: 1.5rem;">
+                <i class="fas fa-user-shield"></i>
+            </div>
+            <h3 class="fw-bold mb-1">Admin Sign In</h3>
+            <p class="text-secondary small mb-0">Enter your credentials to access the feedback dashboard</p>
+        </div>
+
+        <!-- LOGIN FORM -->
+        <form action="{{ url_for('login') }}" method="POST" novalidate>
+            
+            <!-- Username Input -->
+            <div class="mb-3">
+                <label for="username" class="form-label">Username</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-dark border-end-0 border-white border-opacity-10 text-muted">
+                        <i class="fas fa-user"></i>
+                    </span>
+                    <input type="text" class="form-control border-start-0 ps-2" id="username" name="username" placeholder="Enter admin username" required autofocus>
+                </div>
+            </div>
+
+            <!-- Password Input -->
+            <div class="mb-4">
+                <label for="password" class="form-label">Password</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-dark border-end-0 border-white border-opacity-10 text-muted">
+                        <i class="fas fa-lock"></i>
+                    </span>
+                    <input type="password" class="form-control border-start-0 ps-2" id="password" name="password" placeholder="Enter admin password" required>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="d-grid gap-2 mb-4">
+                <button type="submit" class="btn btn-primary-gradient btn-lg fs-6 fw-bold">
+                    <i class="fas fa-right-to-bracket me-2"></i> Log In to Dashboard
+                </button>
+            </div>
+        </form>
+
+        <!-- DEFAULT CREDENTIALS HELP BOX -->
+        <div class="p-3 rounded-3 bg-dark bg-opacity-75 border border-white border-opacity-10">
+            <div class="d-flex align-items-center gap-2 mb-2 text-info small fw-bold">
+                <i class="fas fa-key"></i> Default Development Credentials
+            </div>
+            <div class="d-flex justify-content-between small text-secondary">
+                <span>Username: <strong class="text-white">admin</strong></span>
+                <span>Password: <strong class="text-white">admin123</strong></span>
+            </div>
+        </div>
+
+        <div class="text-center mt-4">
+            <a href="{{ url_for('index') }}" class="text-secondary small text-decoration-none">
+                <i class="fas fa-arrow-left me-1"></i> Back to Public Feedback Page
+            </a>
+        </div>
+
+    </div>
+</main>
+{% endblock %}
