@@ -14,12 +14,30 @@ from dotenv import load_dotenv
 # Load environment variables from .env file if available
 load_dotenv()
 
-app = Flask(__name__)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+app = Flask(
+    __name__,
+    template_folder=os.path.join(BASE_DIR, "templates"),
+    static_folder=os.path.join(BASE_DIR, "static")
+)
 app.secret_key = os.environ.get("SECRET_KEY", "default-dev-secret-key-987654321")
 
 # Database File Configuration
-DB_NAME = os.environ.get("DATABASE_NAME", "database.db")
-DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), DB_NAME)
+def get_db_path():
+    db_name = os.environ.get("DATABASE_NAME", "database.db")
+    local_db = os.path.join(BASE_DIR, db_name)
+    # On Vercel or read-only environments, store/copy database in /tmp
+    if os.environ.get("VERCEL") or os.environ.get("VERCEL_ENV") or not os.access(BASE_DIR, os.W_OK):
+        tmp_db = os.path.join("/tmp", db_name)
+        if not os.path.exists(tmp_db) and os.path.exists(local_db):
+            try:
+                import shutil
+                shutil.copy2(local_db, tmp_db)
+            except Exception as e:
+                print(f"Error copying DB to /tmp: {e}")
+        return tmp_db
+    return local_db
 
 # Admin Credentials (Environment variables with safe defaults)
 ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
@@ -30,10 +48,9 @@ def get_db_connection():
     """
     Establishes and returns a row-factory enabled SQLite database connection.
     """
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(get_db_path())
     conn.row_factory = sqlite3.Row
     return conn
-
 
 def init_db():
     """
