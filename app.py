@@ -44,15 +44,21 @@ def get_db_path():
 # Admin Credentials (Environment variables with safe defaults)
 ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
 ADMIN_PASSWORD_HASH = generate_password_hash(os.environ.get("ADMIN_PASSWORD", "admin123"))
-
-
 def get_db_connection():
     """
     Establishes and returns a row-factory enabled SQLite database connection.
+    Falls back to in-memory DB if file access fails on serverless platforms.
     """
-    conn = sqlite3.connect(get_db_path())
-    conn.row_factory = sqlite3.Row
-    return conn
+    try:
+        db_path = get_db_path()
+        conn = sqlite3.connect(db_path, timeout=10)
+        conn.row_factory = sqlite3.Row
+        return conn
+    except Exception as e:
+        print(f"File DB failed, falling back to in-memory DB: {e}")
+        conn = sqlite3.connect(":memory:")
+        conn.row_factory = sqlite3.Row
+        return conn
 
 
 def init_db():
