@@ -27,15 +27,17 @@ app.secret_key = os.environ.get("SECRET_KEY", "default-dev-secret-key-987654321"
 def get_db_path():
     db_name = os.environ.get("DATABASE_NAME", "database.db")
     local_db = os.path.join(BASE_DIR, db_name)
-    # On Vercel or read-only environments, store/copy database in /tmp
+    # On Vercel or read-only environments, store/copy database in /tmp with write permissions
     if os.environ.get("VERCEL") or os.environ.get("VERCEL_ENV") or not os.access(BASE_DIR, os.W_OK):
         tmp_db = os.path.join("/tmp", db_name)
-        if not os.path.exists(tmp_db) and os.path.exists(local_db):
-            try:
-                import shutil
-                shutil.copy2(local_db, tmp_db)
-            except Exception as e:
-                print(f"Error copying DB to /tmp: {e}")
+        if not os.path.exists(tmp_db):
+            if os.path.exists(local_db):
+                try:
+                    import shutil
+                    shutil.copy2(local_db, tmp_db)
+                    os.chmod(tmp_db, 0o666)  # Grant write permissions to SQLite
+                except Exception as e:
+                    print(f"Error copying DB to /tmp: {e}")
         return tmp_db
     return local_db
 
@@ -51,6 +53,7 @@ def get_db_connection():
     conn = sqlite3.connect(get_db_path())
     conn.row_factory = sqlite3.Row
     return conn
+
 
 def init_db():
     """
@@ -72,8 +75,11 @@ def init_db():
     conn.close()
 
 
-# Ensure database and table exist upon startup
-init_db()
+# Ensure database and table exist upon startup safely
+try:
+    init_db()
+except Exception as e:
+    print(f"Startup DB init warning: {e}")
 
 
 def login_required(f):
