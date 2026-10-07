@@ -6,22 +6,25 @@ import sqlite3
 from functools import wraps
 from datetime import datetime
 from flask import (
-    Flask, render_template, request, jsonify, redirect, url_for, session, flash, Response
+    Flask, render_template, request, jsonify, redirect, url_for, session, flash, Response, send_from_directory
 )
 from werkzeug.security import generate_password_hash, check_password_hash
 from dotenv import load_dotenv
+from jinja2 import ChoiceLoader, FileSystemLoader
 
 # Load environment variables from .env file if available
 load_dotenv()
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-app = Flask(
-    __name__,
-    template_folder=os.path.join(BASE_DIR, "templates"),
-    static_folder=os.path.join(BASE_DIR, "static")
-)
+app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "default-dev-secret-key-987654321")
+
+# Configure Jinja to search both root directory and templates/ subfolder for HTML files
+app.jinja_loader = ChoiceLoader([
+    FileSystemLoader(os.path.join(BASE_DIR, "templates")),
+    FileSystemLoader(BASE_DIR)
+])
 
 # Database File Configuration
 def get_db_path():
